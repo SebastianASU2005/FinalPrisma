@@ -1,0 +1,28 @@
+// tsconfig.json
+
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "noEmitOnError": true,
+    "baseUrl": "./src", // La base para las rutas absolutas es 'src'
+    "paths": {
+      "services/*": ["services/*"],
+      "types/*": ["types/*"],     
+      "middlewares/*": ["middlewares/*"], 
+      "config/*": ["config/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.json"],
+  "exclude": ["node_modules", "dist"]
+}

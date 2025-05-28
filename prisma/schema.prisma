@@ -1,0 +1,287 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // Confirmado: Usaremos MySQL
+  url      = env("DATABASE_URL")
+}
+
+// ==============================================================================
+// ENUMS
+// Los Enums en Prisma se mapean directamente a ENUMs de la base de datos (MySQL).
+// ==============================================================================
+
+enum Color {
+  AZUL
+  BLANCO
+  CELESTE
+  NEGRO
+  VERDE
+  MULTICOLOR
+  ROJO
+  ROSA
+  MARRON
+  AMARILLO
+  VIOLETA
+  GRIS
+}
+
+enum Rol {
+  ADMIN
+  CLIENTE
+}
+
+enum Sexo {
+  FEMENINO
+  MASCULINO
+  UNISEX_CHILD
+  UNISEX
+  OTRO
+}
+
+enum Talle {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+  TALLE_25
+  TALLE_26
+  TALLE_27
+  TALLE_28
+  TALLE_29
+  TALLE_30
+  TALLE_31
+  TALLE_32
+  TALLE_33
+  TALLE_34
+  TALLE_35
+  TALLE_36
+  TALLE_37
+  TALLE_38
+  TALLE_39
+  TALLE_40
+  TALLE_41
+  TALLE_42
+  TALLE_43
+  TALLE_44
+  TALLE_45
+  TALLE_46
+  TALLE_47
+  TALLE_48
+  TALLE_49
+  TALLE_50
+  TALLE_51
+  TALLE_52
+}
+
+// ==============================================================================
+// ENTITIES (MODELS)
+// Aquí definiremos cada una de tus entidades de Java.
+// ==============================================================================
+
+// Modelo Base (campos replicados en cada entidad)
+// Nota: 'id' y 'activo' se añadirán a cada modelo.
+
+model Categoria {
+  id                Int       @id @default(autoincrement())
+  activo            Boolean   @default(true)
+  denominacion      String    @db.VarChar(255) // VARCHAR en MySQL, 255 por defecto si no se especifica.
+
+  // Relación Padre-Hijo
+  categoriaPadreId  Int?      // Clave foránea para la categoría padre (puede ser nula)
+  categoriaPadre    Categoria? @relation("CategoriaParentChild", fields: [categoriaPadreId], references: [id], onDelete: NoAction, onUpdate: NoAction) // Usamos onDelete/onUpdate NoAction para evitar borrados accidentales
+  subcategorias     Categoria[] @relation("CategoriaParentChild")
+
+  // Relación con Producto (Many-to-Many)
+  productos         Producto[] @relation("ProductoCategorias") // Nombre de la relación para distinguirla
+
+  @@map("categorias") // Nombre de la tabla en la base de datos
+}
+
+model Descuento {
+  id                   Int       @id @default(autoincrement())
+  activo               Boolean   @default(true)
+  denominacion         String    @db.VarChar(255)
+  fechaDesde           DateTime  @db.Date
+  fechaHasta           DateTime  @db.Date
+  horaDesde            DateTime  @db.Time(3) // Prisma devolverá un Date object
+  horaHasta            DateTime  @db.Time(3) // Prisma devolverá un Date object
+  descripcionDescuento String?   @db.Text    // Agregado '?' para que sea nullable, lo cual es buena práctica si puede estar vacío.
+  precioPromocional    Float
+
+  productos            Producto[] @relation("ProductoDescuentos")
+
+  @@map("descuentos")
+}
+
+model Direccion {
+  id            Int       @id @default(autoincrement())
+  activo        Boolean   @default(true)
+  calle         String    @db.VarChar(255)
+  numero        Int
+  piso          String?   @db.VarChar(255) // String en Java, VARCHAR en MySQL, puede ser nulo
+  departamento  String?   @db.VarChar(255) // String en Java, VARCHAR en MySQL, puede ser nulo
+  cp            Int
+
+  // Relación con Localidad (Many-to-One)
+  localidadId   Int
+  localidad     Localidad @relation(fields: [localidadId], references: [id])
+
+  // Relación con Usuario (Many-to-One)
+  usuarioId     Int?      // Puede ser nulo si una dirección no está asignada a un usuario inmediatamente (revisar lógica de negocio)
+  usuario       Usuario?  @relation("UsuarioDirecciones", fields: [usuarioId], references: [id])
+
+  @@map("direcciones")
+}
+
+model Imagen {
+  id            Int       @id @default(autoincrement())
+  activo        Boolean   @default(true)
+  denominacion  String    @db.VarChar(255)
+
+  // Relación con Producto (Many-to-One)
+  productoId    Int?
+  producto      Producto? @relation("ProductoImagenes", fields: [productoId], references: [id])
+
+  // Relación inversa con Usuario (One-to-One)
+  // No hay FK aquí, la FK está en el modelo Usuario
+  usuario       Usuario?  @relation("UsuarioImagen") // Solo el campo de relación inversa
+
+  @@map("imagen")
+}
+
+model Localidad {
+  id          Int         @id @default(autoincrement())
+  activo      Boolean     @default(true)
+  nombre      String      @db.VarChar(255) @map("localidad") // El nombre de la columna en la BD es 'localidad'
+
+  // Relación con Provincia (Many-to-One)
+  provinciaId Int
+  provincia   Provincia   @relation(fields: [provinciaId], references: [id])
+
+  // Relación inversa con Direccion (One-to-Many)
+  direcciones Direccion[]
+
+  @@map("localidades")
+}
+
+model OrdenCompra {
+  id            Int                  @id @default(autoincrement())
+  activo        Boolean              @default(true)
+  total         Float                // Double en Java
+  fechaCompra   DateTime             // LocalDateTime en Java se mapea a DateTime (TIMESTAMP) en MySQL
+  direccionEnvio String              @db.VarChar(255)
+
+  // === AÑADIDO: RELACIÓN CON USUARIO (REQUERIDA - Opción 1) ===
+  usuarioId     Int
+  usuario       Usuario              @relation(fields: [usuarioId], references: [id])
+  // ==============================================================
+
+  // Relación con OrdenCompraDetalle (One-to-Many)
+  detalles      OrdenCompraDetalle[]
+
+  @@map("orden_compra")
+}
+
+model OrdenCompraDetalle {
+  id                Int             @id @default(autoincrement())
+  activo            Boolean         @default(true)
+  cantidad          Int
+  subtotal          Float           // Double en Java
+
+  // Relación con OrdenCompra (Many-to-One)
+  ordenCompraId     Int
+  ordenCompra       OrdenCompra     @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade) // onDelete: Cascade para que los detalles se borren con la orden
+
+  // Relación con ProductoDetalle (Many-to-One)
+  productoDetalleId Int
+  productoDetalle   ProductoDetalle @relation(fields: [productoDetalleId], references: [id])
+
+  @@map("orden_compra_detalle")
+}
+
+model Producto {
+  id                  Int               @id @default(autoincrement())
+  activo              Boolean           @default(true)
+  denominacion        String            @db.VarChar(255)
+  precioVenta         Float             // Double en Java
+  sexo                Sexo              // Mapea a ENUM Sexo
+  tienePromocion      Boolean
+
+  // Relación con Categoria (Many-to-Many)
+  categorias          Categoria[]       @relation("ProductoCategorias")
+
+  // Relación con Imagen (One-to-Many)
+  imagenes            Imagen[]          @relation("ProductoImagenes")
+
+  // Relación con ProductoDetalle (One-to-Many)
+  productos_detalles  ProductoDetalle[] @relation("ProductoDetalles") // Nombre de la relación
+
+  // Relación con Descuento (Many-to-Many)
+  descuentos          Descuento[]       @relation("ProductoDescuentos")
+
+  @@map("productos")
+}
+
+model ProductoDetalle {
+  id                    Int                  @id @default(autoincrement())
+  activo                Boolean              @default(true)
+  precioCompra          Float                // Double en Java
+  stockActual           Int
+  cantidad              Int                  // Asegúrate si este campo es 'cantidad' o 'stock inicial'
+  stockMaximo           Int
+  color                 Color                // Mapea a ENUM Color
+  talle                 Talle                // Mapea a ENUM Talle
+
+  // Relación con Producto (Many-to-One)
+  productoId            Int
+  producto              Producto             @relation("ProductoDetalles", fields: [productoId], references: [id])
+
+  // Relación inversa con OrdenCompraDetalle (One-to-Many)
+  ordenCompraDetalles   OrdenCompraDetalle[]
+
+  @@map("producto_detalle")
+}
+
+model Provincia {
+  id          Int         @id @default(autoincrement())
+  activo      Boolean     @default(true)
+  nombre      String      @db.VarChar(255) @map("provincia") // El nombre de la columna en la BD es 'provincia'
+
+  // Relación inversa con Localidad (One-to-Many)
+  localidades Localidad[]
+
+  @@map("provincias")
+}
+
+model Usuario {
+  id              Int         @id @default(autoincrement())
+  activo          Boolean     @default(true)
+  auth0Id         String?     @unique @db.VarChar(255)
+  userName        String?     @unique @db.VarChar(255)
+  nombre          String      @db.VarChar(255)
+  apellido        String      @db.VarChar(255)
+  email           String      @db.VarChar(255) @unique // Agregado @unique para asegurar unicidad
+  dni             Int?
+  sexo            Sexo?
+  fechaNacimiento DateTime?   @db.Date
+  telefono        String?     @db.VarChar(255)
+  rol             Rol
+  imagenId        Int?        @unique
+  imagenUser      Imagen?     @relation("UsuarioImagen", fields: [imagenId], references: [id])
+  password        String      @db.VarChar(255)
+  direcciones     Direccion[] @relation("UsuarioDirecciones")
+  fechaCreacion   DateTime    @default(now()) @map("fecha_creacion") // Campo de creación de fecha
+  fechaModificacion DateTime  @updatedAt @map("fecha_modificacion") // Campo de última modificación, se actualiza automáticamente
+  fechaBaja       DateTime?   @map("fecha_baja") // Campo para registrar la fecha de baja, es opcional
+
+  // === AÑADIDO: RELACIÓN INVERSA CON ORDENCOMPRA ===
+  ordenesCompra   OrdenCompra[]
+
+  @@map("usuarios")
+}
