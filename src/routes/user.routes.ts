@@ -191,7 +191,7 @@ router.get('/:id', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => {
 });
 
 // PUT /api/usuarios/admin/deactivate/:userId - Admin desactiva cualquier cuenta
-router.put('/admin/deactivate/:userId', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => { // CORREGIDO: Usado Rol directamente
+router.put('/admin/desactivate/:userId', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => { // CORREGIDO: Usado Rol directamente
     const targetUserId = parseInt(req.params.userId, 10);
     if (isNaN(targetUserId)) {
         return res.status(400).json({ message: 'ID de usuario inválido.' });
@@ -212,36 +212,43 @@ router.put('/admin/deactivate/:userId', verifyJWT, authorizeRoles([Rol.ADMIN]), 
 });
 
 // PUT /api/usuarios/admin/reactivate/:userId - Admin reactiva cualquier cuenta
-router.put('/admin/reactivate/:userId', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => { // CORREGIDO: Usado Rol directamente
+router.put('/admin/reactivate/:userId', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => {
     const targetUserId = parseInt(req.params.userId, 10);
     if (isNaN(targetUserId)) {
         return res.status(400).json({ message: 'ID de usuario inválido.' });
     }
-    const { newEmail, newUserName } = req.body;
 
-    if (!newEmail || !newUserName) {
-        return res.status(400).json({ message: 'Se requieren un nuevo email y nombre de usuario para reactivar la cuenta.' });
+    const { newEmail } = req.body;
+
+    if (!newEmail) {
+        return res.status(400).json({ message: 'Se requiere un nuevo email para reactivar la cuenta.' });
     }
+
     if (!/\S+@\S+\.\S+/.test(newEmail)) {
         return res.status(400).json({ message: 'Formato de nuevo email inválido.' });
     }
 
     try {
-        const reactivatedUser = await UserService.reactivateAccount(targetUserId, newEmail, newUserName);
-        res.status(200).json({ message: `Cuenta de usuario ${targetUserId} reactivada exitosamente.`, user: UserService.mapToUserDTO(reactivatedUser) });
+        const reactivatedUser = await UserService.reactivateAccount(targetUserId, newEmail);
+        res.status(200).json({
+            message: `Cuenta de usuario ${targetUserId} reactivada exitosamente.`,
+            user: UserService.mapToUserDTO(reactivatedUser)
+        });
     } catch (error: any) {
         console.error(`Error al reactivar cuenta de usuario ${req.params.userId}:`, error.message);
+
         if (error.message.includes('Usuario no encontrado')) {
             return res.status(404).json({ message: error.message });
         }
         if (error.message.includes('cuenta ya está activa') || error.message.includes('ya está en uso')) {
             return res.status(400).json({ message: error.message });
         }
+
         res.status(500).json({ message: 'Error interno del servidor al reactivar cuenta.' });
     }
 });
 // PUT /api/usuarios/deactivate - Usuario desactiva su propia cuenta
-router.put('/deactivate', verifyJWT, async (req, res) => {
+router.put('/desactivate', verifyJWT, async (req, res) => {
     try {
         // El ID del usuario se obtiene directamente del token JWT verificado
         // Asumiendo que verifyJWT añade el user (o userId) a req.user

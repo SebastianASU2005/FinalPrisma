@@ -55,7 +55,7 @@ router.get('/localidad/:localidadId', verifyJWT, authorizeRoles([Rol.ADMIN]), as
 });
 
 // PUT /api/direcciones/deactivate/:id - Desactivar (soft delete) una dirección (solo ADMIN)
-router.put('/deactivate/:id', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => {
+router.put('/desactivate/:id', verifyJWT, authorizeRoles([Rol.ADMIN]), async (req, res) => {
     try {
         const direccionId = parseInt(req.params.id, 10);
         if (isNaN(direccionId)) {

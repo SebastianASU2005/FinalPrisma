@@ -181,7 +181,7 @@ router.patch('/update-credentials', verifyJWT, async (req, res) => {
 });
 
 // DELETE /auth/deactivate - Desactivar la cuenta del usuario autenticado
-router.delete('/deactivate', verifyJWT, async (req, res) => {
+router.delete('/desactivate', verifyJWT, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({ message: 'Usuario no autenticado.' });
@@ -207,25 +207,35 @@ router.put('/reactivate', verifyJWT, async (req, res) => {
         if (!req.user) {
             return res.status(401).json({ message: 'Usuario no autenticado.' });
         }
-        const { newEmail, newUserName } = req.body;
 
-        if (!newEmail || !newUserName) {
-            return res.status(400).json({ message: 'Se requieren un nuevo email y nombre de usuario para reactivar la cuenta.' });
+        const newEmail = req.body.email;
+
+        if (!newEmail) {
+            return res.status(400).json({ message: 'Se requiere un nuevo email para reactivar la cuenta.' });
         }
+
         if (!/\S+@\S+\.\S+/.test(newEmail)) {
             return res.status(400).json({ message: 'Formato de nuevo email inválido.' });
         }
 
-        const reactivatedUser = await UserService.reactivateAccount(req.user.id, newEmail, newUserName);
-        res.status(200).json({ message: 'Cuenta reactivada exitosamente.', user: reactivatedUser });
+        // Usamos el email tanto como email como username
+        const reactivatedUser = await UserService.reactivateAccount(req.user.id, newEmail);
+
+        res.status(200).json({
+            message: 'Cuenta reactivada exitosamente.',
+            user: reactivatedUser
+        });
+
     } catch (error: any) {
         console.error('Error en /auth/reactivate:', error.message);
+
         if (error.message.includes('Usuario no encontrado')) {
             return res.status(404).json({ message: error.message });
         }
         if (error.message.includes('cuenta ya está activa') || error.message.includes('ya está en uso')) {
             return res.status(400).json({ message: error.message });
         }
+
         res.status(500).json({ message: 'Error interno del servidor al reactivar cuenta.' });
     }
 });

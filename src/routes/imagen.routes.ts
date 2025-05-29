@@ -52,7 +52,7 @@ const handleImageError = (res: Response, error: any) => {
 // Si solo queremos listar imágenes activas y que sea público:
 router.get('/', async (req: Request, res: Response) => {
     try {
-        // Podrías añadir un query param como ?includeInactive=true si quieres que los ADMINS también puedan verlas aquí
+        
         const includeInactive = req.query.includeInactive === 'true'; // Opcional, solo si tu service lo soporta
         const images = await ImagenService.findAll(includeInactive); // Asumiendo que ImagenService.findAll existe y filtra por activo por defecto
         return res.status(200).json(images);

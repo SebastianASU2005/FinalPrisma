@@ -24,8 +24,7 @@ export type RegisterRequest = {
     sexo?: Sexo | null;
     fechaNacimiento?: string | null; // "YYYY-MM-DD"
     telefono?: string | null;
-    rol?: Rol; // El rol se asignará por defecto a CLIENTE en el backend,
-               // pero el frontend podría enviarlo si se permite (ej. para admins).
+    rol?: Rol; 
 };
 
 // Request para login de usuario (LoginRequest en Java)

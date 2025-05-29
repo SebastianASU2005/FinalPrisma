@@ -646,69 +646,62 @@ export const UserService = {
      * @param newUserName El nuevo nombre de usuario para la cuenta reactivada.
      * @returns El usuario actualizado con sus relaciones.
      */
-    reactivateAccount: async (userId: number, newEmail: string, newUserName: string): Promise<UsuarioWithRelations> => {
-        const usuario = await prisma.usuario.findUnique({
-            where: { id: userId },
-            include: {
-                imagenUser: true,
-                direcciones: {
-                    include: {
-                        localidad: {
-                            include: {
-                                provincia: true
-                            }
+    reactivateAccount: async (userId: number, newEmail: string): Promise<UsuarioWithRelations> => {
+    const usuario = await prisma.usuario.findUnique({
+        where: { id: userId },
+        include: {
+            imagenUser: true,
+            direcciones: {
+                include: {
+                    localidad: {
+                        include: {
+                            provincia: true
                         }
                     }
                 }
             }
-        });
-
-        if (!usuario) {
-            throw new Error(`Usuario con ID ${userId} no encontrado.`);
         }
-        if (usuario.activo) {
-            throw new Error("La cuenta ya está activa.");
-        }
+    });
 
-        const existingUserByEmail = await prisma.usuario.findFirst({
-            where: { email: newEmail, activo: true }
-        });
-        if (existingUserByEmail && existingUserByEmail.id !== userId) {
-            throw new Error('El nuevo email ya está en uso por otra cuenta activa.');
-        }
+    if (!usuario) {
+        throw new Error(`Usuario con ID ${userId} no encontrado.`);
+    }
+    if (usuario.activo) {
+        throw new Error("La cuenta ya está activa.");
+    }
 
-        const existingUserByUsername = await prisma.usuario.findFirst({
-            where: { userName: newUserName, activo: true }
-        });
-        if (existingUserByUsername && existingUserByUsername.id !== userId) {
-            throw new Error('El nuevo nombre de usuario ya está en uso por otra cuenta activa.');
-        }
+    const existingUserByEmail = await prisma.usuario.findFirst({
+        where: { email: newEmail, activo: true }
+    });
+    if (existingUserByEmail && existingUserByEmail.id !== userId) {
+        throw new Error('El nuevo email ya está en uso por otra cuenta activa.');
+    }
 
-        const reactivatedUser: UsuarioWithRelations = await prisma.usuario.update({ // Explicitly type
-            where: { id: userId },
-            data: {
-                activo: true,
-                fechaBaja: null, // Limpiar la fecha de baja
-                email: newEmail,
-                userName: newUserName,
-                fechaModificacion: new Date(), // Registrar la fecha de modificación
-            },
-            include: {
-                imagenUser: true,
-                direcciones: {
-                    include: {
-                        localidad: {
-                            include: {
-                                provincia: true
-                            }
+    const reactivatedUser: UsuarioWithRelations = await prisma.usuario.update({
+        where: { id: userId },
+        data: {
+            activo: true,
+            fechaBaja: null,
+            email: newEmail,
+            userName: newEmail, 
+            fechaModificacion: new Date(),
+        },
+        include: {
+            imagenUser: true,
+            direcciones: {
+                include: {
+                    localidad: {
+                        include: {
+                            provincia: true
                         }
                     }
                 }
             }
-        });
-        return reactivatedUser;
-    },
+        }
+    });
 
+    return reactivatedUser;
+},
     // =========================================================================================
     // Métodos para Direcciones de un Usuario (Gestionadas por el UsuarioService)
     // =========================================================================================

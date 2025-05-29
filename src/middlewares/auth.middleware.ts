@@ -2,10 +2,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { JwtService } from '../services/jwt.service';
-
-// CORREGIDO: Importa Usuario y Rol directamente de @prisma/client
 import { Prisma, Usuario, Rol } from '@prisma/client';
-import { UserService } from '../services/user.service'; // Asegúrate de la ruta correcta aquí, debería ser user.service
+import { UserService } from '../services/user.service'; 
 
 // Extender el tipo Request de Express para incluir la propiedad 'user'
 // Esto permite que TypeScript sepa que `req.user` existe y cuál es su tipo.

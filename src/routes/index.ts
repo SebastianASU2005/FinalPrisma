@@ -26,3 +26,13 @@ router.use('/usuarios', usuarioRoutes); // Rutas para operaciones de usuario (ej
 router.use('/auth', authRoutes);       // Rutas para autenticación (registro, login, perfil propio)
 
 export default router;
+
+
+//RUTAS TESTEADAS
+/*
+AUTH
+USUARIOS
+PROVINCIAS
+LOCALIDADES
+DIRECCIONES
+*/
