@@ -19,7 +19,7 @@ type AsyncRouteHandlerWithParamsAndBody<P, B> = (req: Request<P, {}, B>, res: Re
 // RUTAS DE PRODUCTO (adaptadas al estilo DTO de Java)
 // ==============================================================================
 
-// GET /api/products/dto - Obtener todos los productos activos (como DTOs)
+// GET /api/productos/dto - Obtener todos los productos activos (como DTOs)
 router.get('/dto', (async (req, res) => {
     try {
         const productsDTO = await ProductService.obtenerTodosLosProductosDTO();

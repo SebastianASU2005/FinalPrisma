@@ -28,11 +28,14 @@ router.use('/auth', authRoutes);       // Rutas para autenticación (registro, l
 export default router;
 
 
-//RUTAS TESTEADAS
+//RUTAS PRINCIPALES TESTEADAS
 /*
 AUTH
 USUARIOS
 PROVINCIAS
 LOCALIDADES
 DIRECCIONES
+PRODUCTOS
+CATEGORIAS
+DESCUENTOS
 */
